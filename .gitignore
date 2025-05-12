@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+*.suo
+*.db
+.vscode/
+*.log
+.env
+wwwroot/lib/
+

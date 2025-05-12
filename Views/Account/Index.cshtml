@@ -1,0 +1,76 @@
+@model EcommerceMVC.Models.AccountViewModel
+
+@{
+    ViewData["Title"] = "Account";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <!-- Login Form -->
+        <section id="loginForm">
+            <h3>Log in to your account</h3>
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" />
+                    <label asp-for="Email"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" aria-required="true" />
+                    <label asp-for="Password"></label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" asp-for="RememberMe" />
+                    <label class="form-check-label" asp-for="RememberMe">
+                        @Html.DisplayNameFor(m => m.RememberMe)
+                    </label>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-primary">Log in</button>
+            </form>
+        </section>
+
+        <!-- Registration Form -->
+        <section id="registerForm" class="mt-4">
+            <h3>Create a new account</h3>
+            <form asp-action="Register" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="RegisterEmail" class="form-control" autocomplete="username" aria-required="true" />
+                    <label asp-for="RegisterEmail"></label>
+                    <span asp-validation-for="RegisterEmail" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="RegisterPassword" class="form-control" type="password" autocomplete="new-password" aria-required="true" />
+                    <label asp-for="RegisterPassword"></label>
+                    <span asp-validation-for="RegisterPassword" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="ConfirmPassword" class="form-control" type="password" autocomplete="new-password" aria-required="true" />
+                    <label asp-for="ConfirmPassword"></label>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-primary">Register</button>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
