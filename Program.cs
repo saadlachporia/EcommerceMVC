@@ -1,7 +1,8 @@
-// Program.cs
 using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using EcommerceMVC.Data; // For SeedData
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +14,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
+// Configure Identity to use ApplicationUser
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
@@ -56,7 +58,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed the database with initial data if needed
+// Seed the database with default admin user
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -64,8 +66,9 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.Migrate();
-        // Optional: Add seed data
-        // await SeedData.InitializeAsync(services);
+
+        // ✅ Seed admin user and role
+        await SeedData.InitializeAsync(services);
     }
     catch (Exception ex)
     {
@@ -74,4 +77,4 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Run();
+await app.RunAsync(); // Ensure this is awaited to handle async operations
