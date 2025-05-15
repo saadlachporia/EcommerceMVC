@@ -21,6 +21,9 @@ public class Product
     
     public string? ImagePath { get; set; }
 
+    public int? CategoryId { get; set; } // Foreign Key
+    public Category? Category { get; set; } // Navigation Property
+
     [NotMapped]
     public IFormFile? ImageFile { get; set; }
 }

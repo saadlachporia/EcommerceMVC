@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
 using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,10 @@ namespace EcommerceMVC.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var products = await _context.Products.ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category)   // Eager load Category
+                .ToListAsync();
+
             return View(products);
         }
 
@@ -33,6 +37,7 @@ namespace EcommerceMVC.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name");
             return View();
         }
 
@@ -70,6 +75,8 @@ namespace EcommerceMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // If we got here, re-populate categories for the dropdown
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -80,10 +87,14 @@ namespace EcommerceMVC.Controllers
             if (id == null)
                 return NotFound();
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.Category)  // Load category for display if needed
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
             if (product == null)
                 return NotFound();
 
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -141,6 +152,8 @@ namespace EcommerceMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Re-populate categories if model validation failed
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -151,7 +164,10 @@ namespace EcommerceMVC.Controllers
             if (id == null)
                 return NotFound();
 
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            var product = await _context.Products
+                .Include(p => p.Category)  // Include category for confirmation display
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
             if (product == null)
                 return NotFound();
 

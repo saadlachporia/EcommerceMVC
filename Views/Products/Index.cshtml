@@ -25,6 +25,7 @@
             <th>Name</th>
             <th>Description</th>
             <th>Price</th>
+            <th>Category</th>
             <th>Stock</th>
             @if (isAdmin)
             {
@@ -48,8 +49,9 @@
                 </td>
                 <td>@item.Name</td>
                 <td>@item.Description</td>
-                <td>@item.Price.ToString("C")</td>
+                <td>@item.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</td>
                 <td>@item.StockQuantity</td>
+                <td>@item.Category?.Name</td>
                 @if (isAdmin)
                 {
                     <td>
