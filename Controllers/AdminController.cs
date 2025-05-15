@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using EcommerceMVC.Models;
 using System.Threading.Tasks;
 
@@ -22,10 +22,9 @@ namespace EcommerceMVC.Controllers
 
             if (user == null || !user.IsAdmin)
             {
-                return Forbid(); // 403 Forbidden if user is not an admin
+                return Forbid(); // 403 Forbidden if not admin
             }
 
-            // Return the admin dashboard view
             return View();
         }
     }

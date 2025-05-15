@@ -1,14 +1,22 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
 @model IEnumerable<EcommerceMVC.Models.Product>
 
 @{
     ViewData["Title"] = "Product List";
+    bool isAdmin = User.IsInRole("Admin");
 }
 
 <h1>Product List</h1>
 
-<p>
-    <a class="btn btn-primary" href="@Url.Action("Create")">Add New Product</a>
-</p>
+@if (isAdmin)
+{
+    <p>
+        <a class="btn btn-primary" href="@Url.Action("Create")">Add New Product</a>
+    </p>
+}
 
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
@@ -18,7 +26,10 @@
             <th>Description</th>
             <th>Price</th>
             <th>Stock</th>
-            <th>Actions</th>
+            @if (isAdmin)
+            {
+                <th>Actions</th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -39,10 +50,13 @@
                 <td>@item.Description</td>
                 <td>@item.Price.ToString("C")</td>
                 <td>@item.StockQuantity</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-danger">Delete</a>
-                </td>
+                @if (isAdmin)
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                }
             </tr>
         }
     </tbody>

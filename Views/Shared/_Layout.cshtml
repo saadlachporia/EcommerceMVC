@@ -26,22 +26,29 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
-                            <li class="nav-item"></li>
+                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
                         </li>
-                            <li class="nav-item"></li>
+                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
                         </li>
-                            </li>
-                            <li class="nav-item"></li>
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Index</a>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
+        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+        {
+            <div class="alert alert-success text-center" role="alert">
+                ✅ Logged in as <strong>Admin</strong>
+            </div>
+        }
+
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -52,6 +59,7 @@
             &copy; 2025 - EcommerceMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

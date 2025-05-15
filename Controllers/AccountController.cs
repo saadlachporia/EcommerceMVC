@@ -22,15 +22,9 @@ namespace EcommerceMVC.Controllers
             _logger = logger;
         }
 
-        // =============================
-        // Register (GET)
-        // =============================
         [HttpGet]
         public IActionResult Register() => View();
 
-        // =============================
-        // Register (POST)
-        // =============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -41,7 +35,7 @@ namespace EcommerceMVC.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
-                IsAdmin = false // default new users to non-admin
+                IsAdmin = false
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -59,15 +53,9 @@ namespace EcommerceMVC.Controllers
             return View(model);
         }
 
-        // =============================
-        // Login (GET)
-        // =============================
         [HttpGet]
         public IActionResult Login() => View();
 
-        // =============================
-        // Login (POST)
-        // =============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -87,8 +75,6 @@ namespace EcommerceMVC.Controllers
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
-
-                // Redirect admin to dashboard
                 if (user.IsAdmin)
                     return RedirectToAction("Dashboard", "Admin");
 
@@ -99,9 +85,6 @@ namespace EcommerceMVC.Controllers
             return View(model);
         }
 
-        // =============================
-        // Logout
-        // =============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()

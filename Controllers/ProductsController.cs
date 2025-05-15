@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
@@ -29,6 +30,7 @@ namespace EcommerceMVC.Controllers
         }
 
         // GET: Products/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -37,9 +39,9 @@ namespace EcommerceMVC.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(Product product)
         {
-            // Image is required for new product
             if (product.ImageFile == null || product.ImageFile.Length == 0)
             {
                 ModelState.AddModelError("ImageFile", "Please upload an image.");
@@ -47,7 +49,6 @@ namespace EcommerceMVC.Controllers
 
             if (ModelState.IsValid)
             {
-                // Save image to wwwroot/images with unique name
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
                 if (!Directory.Exists(uploadsFolder))
                 {
@@ -73,6 +74,7 @@ namespace EcommerceMVC.Controllers
         }
 
         // GET: Products/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -88,6 +90,7 @@ namespace EcommerceMVC.Controllers
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, Product product)
         {
             if (id != product.ProductId)
@@ -117,7 +120,6 @@ namespace EcommerceMVC.Controllers
             }
             else
             {
-                // Keep old image path if no new image uploaded
                 product.ImagePath = existingProduct.ImagePath;
             }
 
@@ -143,6 +145,7 @@ namespace EcommerceMVC.Controllers
         }
 
         // GET: Products/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -158,13 +161,12 @@ namespace EcommerceMVC.Controllers
         // POST: Products/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Optionally delete image file here if desired
-
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }

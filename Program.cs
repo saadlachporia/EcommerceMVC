@@ -1,20 +1,19 @@
 using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using EcommerceMVC.Data; // For SeedData
+using EcommerceMVC.Data;
 using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Configure DbContext
+// Configure Entity Framework and SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Identity to use ApplicationUser
+// Configure Identity with ApplicationUser
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -27,7 +26,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Configure cookie settings
+// Configure authentication cookie
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -39,7 +38,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -58,17 +57,17 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed the database with default admin user
+// Seed admin user and role
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.Migrate();
 
-        // ✅ Seed admin user and role
-        await SeedData.InitializeAsync(services);
+        await SeedData.InitializeAsync(services); // Ensure this is awaited
     }
     catch (Exception ex)
     {
@@ -77,4 +76,4 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-await app.RunAsync(); // Ensure this is awaited to handle async operations
+await app.RunAsync();
