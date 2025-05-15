@@ -10,6 +10,7 @@ namespace EcommerceMVC.Models
             : base(options)
         {
         }
+        public DbSet<Product> Products { get; set; }
 
         // Add your DbSets here
         // public DbSet<Product> Products { get; set; }

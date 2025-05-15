@@ -1,0 +1,25 @@
+```cshtml
+@model EcommerceMVC.Models.Product
+
+<h2>Delete Product</h2>
+
+<h3>Are you sure you want to delete the product: <strong>@Model.Name</strong>?</h3>
+
+@if (!string.IsNullOrEmpty(Model.ImagePath)) {
+    <div>
+        <img src="@Model.ImagePath" alt="Product Image" width="150" height="150" />
+    </div>
+}
+
+<div>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Price:</strong> @Model.Price.ToString("C")</p>
+    <p><strong>Stock:</strong> @Model.StockQuantity</p>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="ProductId" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+```
