@@ -1,21 +1,24 @@
-using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
+using EcommerceMVC.Models;
+using Microsoft.AspNetCore.Hosting;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System;
 
 namespace EcommerceMVC.Controllers
 {
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Products
@@ -28,7 +31,7 @@ namespace EcommerceMVC.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            return View(new Product());
+            return View();
         }
 
         // POST: Products/Create
@@ -36,10 +39,16 @@ namespace EcommerceMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
         {
-            // Upload image BEFORE checking ModelState
-            if (product.ImageFile != null && product.ImageFile.Length > 0)
+            // Image is required for new product
+            if (product.ImageFile == null || product.ImageFile.Length == 0)
             {
-                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                ModelState.AddModelError("ImageFile", "Please upload an image.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                // Save image to wwwroot/images with unique name
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
@@ -54,19 +63,10 @@ namespace EcommerceMVC.Controllers
                 }
 
                 product.ImagePath = "/images/" + uniqueFileName;
-            }
 
-            if (ModelState.IsValid)
-            {
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            }
-
-            // Debugging output
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine("ModelState error: " + error.ErrorMessage);
             }
 
             return View(product);
@@ -88,70 +88,45 @@ namespace EcommerceMVC.Controllers
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,StockQuantity,ImagePath,ImageFile")] Product product)
+        public async Task<IActionResult> Edit(int id, Product product)
         {
             if (id != product.ProductId)
                 return NotFound();
 
-            // Always clear the ImageFile validation error if we have an existing image path
-            ModelState.Remove("ImageFile"); // This will remove the validation error for ImageFile completely
-            
-            // Retrieve the existing product to get the current ImagePath if none provided
-            if (string.IsNullOrEmpty(product.ImagePath))
+            var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+            if (existingProduct == null)
+                return NotFound();
+
+            if (product.ImageFile != null && product.ImageFile.Length > 0)
             {
-                var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
-                if (existingProduct != null)
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
+                if (!Directory.Exists(uploadsFolder))
                 {
-                    product.ImagePath = existingProduct.ImagePath;
+                    Directory.CreateDirectory(uploadsFolder);
                 }
+
+                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await product.ImageFile.CopyToAsync(stream);
+                }
+
+                product.ImagePath = "/images/" + uniqueFileName;
+            }
+            else
+            {
+                // Keep old image path if no new image uploaded
+                product.ImagePath = existingProduct.ImagePath;
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Handle the image upload if a new image is provided
-                    if (product.ImageFile != null && product.ImageFile.Length > 0)
-                    {
-                        string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await product.ImageFile.CopyToAsync(stream);
-                        }
-
-                        // Delete old image if exists
-                        if (!string.IsNullOrEmpty(product.ImagePath))
-                        {
-                            string oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", product.ImagePath.TrimStart('/'));
-                            if (System.IO.File.Exists(oldImagePath))
-                            {
-                                try
-                                {
-                                    System.IO.File.Delete(oldImagePath);
-                                }
-                                catch (Exception ex)
-                                {
-                                    // Log the error but continue
-                                    Console.WriteLine("Error deleting old image: " + ex.Message);
-                                }
-                            }
-                        }
-
-                        product.ImagePath = "/images/" + uniqueFileName;
-                    }
-
                     _context.Update(product);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -160,13 +135,8 @@ namespace EcommerceMVC.Controllers
                     else
                         throw;
                 }
-            }
 
-            // Debugging output
-            Console.WriteLine("ModelState is invalid in Edit action");
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine("ModelState error: " + error.ErrorMessage);
+                return RedirectToAction(nameof(Index));
             }
 
             return View(product);
@@ -178,7 +148,7 @@ namespace EcommerceMVC.Controllers
             if (id == null)
                 return NotFound();
 
-            var product = await _context.Products.FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
             if (product == null)
                 return NotFound();
 
@@ -193,30 +163,13 @@ namespace EcommerceMVC.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Optionally delete image file associated with the product
-                if (!string.IsNullOrEmpty(product.ImagePath))
-                {
-                    string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", product.ImagePath.TrimStart('/'));
-                    if (System.IO.File.Exists(imagePath))
-                    {
-                        try
-                        {
-                            System.IO.File.Delete(imagePath); // Delete image if it exists
-                        }
-                        catch (Exception ex)
-                        {
-                            // Handle any exceptions that may occur during image deletion
-                            Console.WriteLine("Error deleting image: " + ex.Message);
-                        }
-                    }
-                }
+                // Optionally delete image file here if desired
 
-                // Remove the product from the database
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
     }
 }
