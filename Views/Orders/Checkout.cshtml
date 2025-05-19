@@ -1,0 +1,73 @@
+@model EcommerceMVC.Models.OrderViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2>Checkout</h2>
+
+<form asp-action="Checkout" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
+    @* Hidden OrderId to preserve it in POST *@
+    <input type="hidden" asp-for="OrderId" />
+
+    <div class="form-group mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" type="email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Phone" class="form-label"></label>
+        <input asp-for="Phone" type="tel" class="form-control" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-4">
+        <label asp-for="PaymentMethod" class="form-label"></label>
+        <select asp-for="PaymentMethod" class="form-select">
+            <option value="">-- Select Payment Method --</option>
+            <option value="CashOnDelivery">Cash on Delivery</option>
+            <option value="CreditCard">Credit Card</option>
+            <option value="EFT">EFT</option>
+        </select>
+        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+    </div>
+
+    <h4>Order Summary</h4>
+    <ul class="list-group mb-3">
+        @foreach (var item in Model.CartItems)
+        {
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+                <div>
+                    <h6 class="my-0">@item.ProductName</h6>
+                    <small class="text-muted">Quantity: @item.Quantity</small>
+                </div>
+                <span class="text-muted">@((item.ProductPrice * item.Quantity).ToString("C"))</span>
+            </li>
+        }
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Total</span>
+            <strong>@Model.Total.ToString("C")</strong>
+        </li>
+    </ul>
+
+    <button type="submit" class="btn btn-primary">Place Order</button>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

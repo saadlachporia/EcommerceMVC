@@ -1,0 +1,30 @@
+@model EcommerceMVC.Models.Order
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<h2>Thank you for your order!</h2>
+
+<p>Your order <strong>#@Model.OrderId</strong> was successfully placed on @Model.OrderDate.ToLocalTime().</p>
+
+<h4>Order Summary</h4>
+<ul class="list-group mb-3">
+    @foreach (var item in Model.OrderItems)
+    {
+        <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+                <h6 class="my-0">@item.Product.Name</h6>
+                <small class="text-muted">Quantity: @item.Quantity</small>
+            </div>
+            <span class="text-muted">@((item.Price * item.Quantity).ToString("C"))</span>
+        </li>
+    }
+    <li class="list-group-item d-flex justify-content-between">
+        <span>Total</span>
+        <strong>@Model.TotalAmount.ToString("C")</strong>
+    </li>
+</ul>
+
+<a href="@Url.Action("Index", "Orders")" class="btn btn-primary">View My Orders</a>
+<a href="@Url.Action("Index", "Products")" class="btn btn-secondary">Continue Shopping</a>

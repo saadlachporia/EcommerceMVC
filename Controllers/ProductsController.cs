@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
 using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,13 +27,28 @@ namespace EcommerceMVC.Controllers
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
-                .Include(p => p.Category)   // Eager load Category
+                .Include(p => p.Category)
                 .ToListAsync();
 
             return View(products);
         }
 
-        // GET: Products/Create
+        // GET: Products/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(m => m.ProductId == id);
+
+            if (product == null)
+                return NotFound();
+
+            return View(product);
+        }
+
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
@@ -41,32 +56,24 @@ namespace EcommerceMVC.Controllers
             return View();
         }
 
-        // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(Product product)
         {
             if (product.ImageFile == null || product.ImageFile.Length == 0)
-            {
                 ModelState.AddModelError("ImageFile", "Please upload an image.");
-            }
 
             if (ModelState.IsValid)
             {
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
+                Directory.CreateDirectory(uploadsFolder);
 
                 string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
-                {
                     await product.ImageFile.CopyToAsync(stream);
-                }
 
                 product.ImagePath = "/images/" + uniqueFileName;
 
@@ -75,22 +82,17 @@ namespace EcommerceMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // If we got here, re-populate categories for the dropdown
             ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
-        // GET: Products/Edit/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
                 return NotFound();
 
-            var product = await _context.Products
-                .Include(p => p.Category)  // Load category for display if needed
-                .FirstOrDefaultAsync(p => p.ProductId == id);
-
+            var product = await _context.Products.FindAsync(id);
             if (product == null)
                 return NotFound();
 
@@ -98,7 +100,6 @@ namespace EcommerceMVC.Controllers
             return View(product);
         }
 
-        // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -114,18 +115,13 @@ namespace EcommerceMVC.Controllers
             if (product.ImageFile != null && product.ImageFile.Length > 0)
             {
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
+                Directory.CreateDirectory(uploadsFolder);
 
                 string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
-                {
                     await product.ImageFile.CopyToAsync(stream);
-                }
 
                 product.ImagePath = "/images/" + uniqueFileName;
             }
@@ -140,24 +136,20 @@ namespace EcommerceMVC.Controllers
                 {
                     _context.Update(product);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.Products.Any(e => e.ProductId == product.ProductId))
+                    if (!_context.Products.Any(e => e.ProductId == id))
                         return NotFound();
-                    else
-                        throw;
+                    else throw;
                 }
-
-                return RedirectToAction(nameof(Index));
             }
 
-            // Re-populate categories if model validation failed
             ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
-        // GET: Products/Delete/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -165,7 +157,7 @@ namespace EcommerceMVC.Controllers
                 return NotFound();
 
             var product = await _context.Products
-                .Include(p => p.Category)  // Include category for confirmation display
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null)
@@ -174,7 +166,6 @@ namespace EcommerceMVC.Controllers
             return View(product);
         }
 
-        // POST: Products/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]

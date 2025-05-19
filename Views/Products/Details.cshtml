@@ -1,0 +1,17 @@
+@model EcommerceMVC.Models.Product
+
+<h2>@Model.Name</h2>
+
+<img src="@Model.ImagePath" alt="@Model.Name" width="200" />
+<p>@Model.Description</p>
+<p>Price: @Model.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</p>
+<p>Category: @Model.Category?.Name</p>
+<p>Stock: @Model.StockQuantity</p>
+
+<form asp-controller="Cart" asp-action="AddToCart" method="post">
+    <input type="hidden" name="productId" value="@Model.ProductId" />
+    <label>Quantity:</label>
+    <input type="number" name="quantity" value="1" min="1" class="form-control" style="width:100px" />
+    <br />
+    <button type="submit" class="btn btn-success">Add to Cart</button>
+</form>
