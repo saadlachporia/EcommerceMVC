@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using EcommerceMVC.Models;
+using EcommerceMVC.ViewModels;
 using System.Threading.Tasks;
 
 namespace EcommerceMVC.Controllers
@@ -29,12 +30,16 @@ namespace EcommerceMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) 
+                return View(model);
 
             var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
+                FullName = model.FullName, // map FullName
+                PhoneNumber = model.PhoneNumber, // map PhoneNumber
+                PromotionalEmailsEnabled = model.PromotionalEmailsEnabled, // map promo flag
                 IsAdmin = false
             };
 
@@ -58,9 +63,10 @@ namespace EcommerceMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(EcommerceMVC.ViewModels.LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)

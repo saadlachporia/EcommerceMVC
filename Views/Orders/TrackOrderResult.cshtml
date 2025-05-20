@@ -1,0 +1,36 @@
+@model EcommerceMVC.Models.OrderViewModels.TrackOrderViewModel
+
+@{
+    ViewData["Title"] = "Order Status";
+}
+
+<h2>Order #@Model.OrderId - Status: <span class="text-info">@Model.Status</span></h2>
+
+<p><strong>Placed on:</strong> @Model.OrderDate.ToShortDateString()</p>
+<p><strong>Name:</strong> @Model.FullName</p>
+<p><strong>Address:</strong> @Model.Address</p>
+
+<h4>Items</h4>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.ProductName</td>
+                <td>@item.Quantity</td>
+                <td>@item.Price.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Total: <strong>@Model.TotalAmount.ToString("C")</strong></h4>
+
+<a href="@Url.Action("TrackOrder", "Orders")" class="btn btn-secondary mt-3">Track Another Order</a>

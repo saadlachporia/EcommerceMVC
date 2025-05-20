@@ -34,5 +34,8 @@ namespace EcommerceMVC.Models
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public string Status { get; set; }
+
+        // Tracking number for shipment
+        public string? TrackingNumber { get; set; }
     }
 }

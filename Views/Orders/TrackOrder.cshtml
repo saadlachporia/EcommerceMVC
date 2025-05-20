@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Track Your Order";
+}
+
+<h2>Track Your Order</h2>
+
+<form asp-action="TrackOrder" method="post">
+    <div class="form-group">
+        <label for="orderId">Enter Your Order ID</label>
+        <input type="number" name="orderId" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Track</button>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="text-danger">
+        @Html.ValidationSummary()
+    </div>
+}

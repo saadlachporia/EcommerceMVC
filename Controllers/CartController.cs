@@ -1,121 +1,170 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using EcommerceMVC.Models;
+using EcommerceMVC.Services;
+using EcommerceMVC.Data;
+using System;
 
-public class CartController : Controller
+namespace EcommerceMVC.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public CartController(ApplicationDbContext context)
+    [Authorize]
+    public class CartController : Controller
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
+        private readonly EmailService _emailService;
 
-    // Display current user's cart
-    public async Task<IActionResult> Index()
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return RedirectToAction("Login", "Account");
-
-        var cart = await _context.Carts
-            .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
-
-        return View(cart?.CartItems ?? new List<CartItem>());
-    }
-
-    // Add item to cart
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Add(int productId, int quantity = 1)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return RedirectToAction("Login", "Account"); // Redirect if not logged in
-
-        var product = await _context.Products.FindAsync(productId);
-        if (product == null)
-            return NotFound();
-
-        var cart = await _context.Carts
-            .Include(c => c.CartItems)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
-
-        if (cart == null)
+        public CartController(ApplicationDbContext context, EmailService emailService)
         {
-            cart = new Cart { UserId = userId };
-            _context.Carts.Add(cart);
-            await _context.SaveChangesAsync();
+            _context = context;
+            _emailService = emailService;
         }
 
-        var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem != null)
+        public async Task<IActionResult> Index()
         {
-            cartItem.Quantity += quantity;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            return View(cart?.CartItems ?? new List<CartItem>());
         }
-        else
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Add(int productId, int quantity = 1)
         {
-            cartItem = new CartItem
+            if (quantity <= 0) quantity = 1;
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+                return NotFound();
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
             {
-                CartId = cart.CartId,
-                ProductId = productId,
-                Quantity = quantity
-            };
-            _context.CartItems.Add(cartItem);
+                cart = new Cart { UserId = userId };
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync(); // Save to generate CartId for FK
+            }
+
+            var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
+            if (cartItem != null)
+            {
+                cartItem.Quantity += quantity;
+            }
+            else
+            {
+                cartItem = new CartItem
+                {
+                    CartId = cart.CartId,
+                    ProductId = productId,
+                    Quantity = quantity
+                };
+                _context.CartItems.Add(cartItem);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // NOTE: Removed email notification for adding items to cart as per requirements
+
+            return RedirectToAction(nameof(Index));
         }
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    // Update quantity of an item in the cart
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(int cartItemId, int quantity)
-    {
-        var cartItem = await _context.CartItems
-            .Include(ci => ci.Cart)
-            .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (cartItem == null || cartItem.Cart.UserId != userId)
-            return RedirectToAction("Login", "Account"); // Redirect unauthorized
-
-        if (quantity <= 0)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(int cartItemId, int quantity)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cartItem = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+
+            if (cartItem == null || cartItem.Cart == null || cartItem.Cart.UserId != userId)
+                return Forbid();
+
+            if (quantity <= 0)
+            {
+                _context.CartItems.Remove(cartItem);
+            }
+            else
+            {
+                cartItem.Quantity = quantity;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Remove(int cartItemId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cartItem = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+
+            if (cartItem == null || cartItem.Cart == null || cartItem.Cart.UserId != userId)
+                return Forbid();
+
             _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
-        else
+
+        // Schedule a task to check for abandoned carts daily and send reminder emails
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendAbandonmentReminders()
         {
-            cartItem.Quantity = quantity;
+            // Get carts that have been inactive for more than 24 hours
+            var abandonedCarts = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                .Include(c => c.User)
+                .Where(c => c.CartItems.Any() && c.LastModified < DateTime.UtcNow.AddHours(-24))
+                .ToListAsync();
+
+            int emailsSent = 0;
+
+            foreach (var cart in abandonedCarts)
+            {
+                if (cart.User != null && !string.IsNullOrEmpty(cart.User.Email))
+                {
+                    var cartItems = cart.CartItems.Select(ci => (ci.Product.Name, ci.Product.Price)).ToList();
+                    
+                    await _emailService.SendCartAbandonmentReminderAsync(
+                        cart.User.Email,
+                        cart.User.UserName ?? "Valued Customer",
+                        cartItems
+                    );
+                    
+                    emailsSent++;
+                    
+                    // Update the cart's last reminder sent timestamp
+                    cart.LastReminderSent = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return Json(new { success = true, message = $"Sent {emailsSent} cart abandonment reminder emails." });
         }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    // Remove an item from the cart
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Remove(int cartItemId)
-    {
-        var cartItem = await _context.CartItems
-            .Include(ci => ci.Cart)
-            .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (cartItem == null || cartItem.Cart.UserId != userId)
-            return RedirectToAction("Login", "Account"); // Redirect unauthorized
-
-        _context.CartItems.Remove(cartItem);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
     }
 }

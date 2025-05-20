@@ -4,42 +4,46 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 using EcommerceMVC.Models;
 using EcommerceMVC.Models.OrderViewModels;
+using EcommerceMVC.Services;
+using EcommerceMVC.Data;
 
 namespace EcommerceMVC.Controllers
 {
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<OrdersController> _logger;
+        private readonly EmailService _emailService;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrdersController(
+            ApplicationDbContext context,
+            ILogger<OrdersController> logger,
+            EmailService emailService)
         {
             _context = context;
+            _logger = logger;
+            _emailService = emailService;
         }
 
-        // GET: Orders
         public async Task<IActionResult> Index(string status = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            var ordersQuery = _context.Order
+            var orders = await _context.Order
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
-                .Where(o => o.UserId == userId);
+                .Where(o => o.UserId == userId && (status == null || o.Status == status))
+                .ToListAsync();
 
-            if (!string.IsNullOrEmpty(status))
-            {
-                ordersQuery = ordersQuery.Where(o => o.Status == status);
-            }
-
-            var orders = await ordersQuery.ToListAsync();
             return View(orders);
         }
 
-        // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -52,12 +56,9 @@ namespace EcommerceMVC.Controllers
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
 
-            if (order == null) return NotFound();
-
-            return View(order);
+            return order == null ? NotFound() : View(order);
         }
 
-        // GET: Orders/Confirmation/5
         public async Task<IActionResult> Confirmation(int? id)
         {
             if (id == null) return NotFound();
@@ -70,25 +71,49 @@ namespace EcommerceMVC.Controllers
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
 
-            if (order == null) return NotFound();
-
-            return View(order);
+            return order == null ? NotFound() : View(order);
         }
 
-        // AJAX: Update Status
         [HttpPost]
-        public async Task<IActionResult> UpdateStatus(int orderId, string status)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateStatus(int orderId, string status, string trackingNumber = null)
         {
-            var order = await _context.Order.FindAsync(orderId);
+            var order = await _context.Order
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
             if (order == null) return NotFound();
 
             order.Status = status;
+            if (!string.IsNullOrEmpty(trackingNumber))
+            {
+                order.TrackingNumber = trackingNumber;
+            }
+
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Status updated successfully." });
+            if (!string.IsNullOrEmpty(order.Email))
+            {
+                try
+                {
+                    await _emailService.SendShippingUpdateAsync(
+                        order.Email,
+                        order.FullName,
+                        orderId,
+                        status,
+                        trackingNumber
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send shipping update email for OrderId {OrderId}", orderId);
+                }
+            }
+
+            return Json(new { success = true, message = "Status updated and shipping notification email sent." });
         }
 
-        // GET: Orders/Checkout
         public async Task<IActionResult> Checkout()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -116,15 +141,12 @@ namespace EcommerceMVC.Controllers
             return View(model);
         }
 
-        // POST: Orders/Checkout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account");
-
-            if (!ModelState.IsValid) return View(model);
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
@@ -134,6 +156,18 @@ namespace EcommerceMVC.Controllers
             if (cart == null || !cart.CartItems.Any())
             {
                 ModelState.AddModelError("", "Your cart is empty.");
+                return View(model);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.CartItems = cart.CartItems.Select(ci => new CartItemViewModel
+                {
+                    ProductName = ci.Product.Name,
+                    Quantity = ci.Quantity,
+                    ProductPrice = ci.Product.Price
+                }).ToList();
+                model.Total = cart.CartItems.Sum(ci => ci.Product.Price * ci.Quantity);
                 return View(model);
             }
 
@@ -147,7 +181,7 @@ namespace EcommerceMVC.Controllers
                 Email = model.Email,
                 Phone = model.Phone,
                 PaymentMethod = model.PaymentMethod,
-                Status = "Incomplete", // default status
+                Status = "Pending",
                 OrderItems = cart.CartItems.Select(ci => new OrderItem
                 {
                     ProductId = ci.ProductId,
@@ -161,14 +195,99 @@ namespace EcommerceMVC.Controllers
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync();
 
+            if (!string.IsNullOrEmpty(order.Email))
+            {
+                try
+                {
+                    var orderItems = order.OrderItems.Select(item =>
+                        (item.Product.Name, item.Quantity, item.Price)).ToList();
+
+                    await _emailService.SendOrderConfirmationAsync(
+                        order.Email,
+                        order.FullName,
+                        order.OrderId,
+                        order.TotalAmount,
+                        orderItems
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send order confirmation email for OrderId {OrderId}", order.OrderId);
+                }
+            }
+
             return RedirectToAction("Confirmation", new { id = order.OrderId });
         }
 
-        // Optional Edit/Delete/Exist methods...
+        public IActionResult TrackOrder() => View();
 
-        private bool OrderExists(int id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TrackOrder(int orderId)
         {
-            return _context.Order.Any(e => e.OrderId == id);
+            var order = await _context.Order
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                ModelState.AddModelError("", "Order not found. Please check your Order ID.");
+                return View();
+            }
+
+            var viewModel = new TrackOrderViewModel
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                FullName = order.FullName,
+                Address = order.Address,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                TrackingNumber = order.TrackingNumber,
+                Items = order.OrderItems.Select(oi => new OrderItemViewModel
+                {
+                    ProductName = oi.Product.Name,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+
+            return View("TrackOrderResult", viewModel);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendPromotionalEmail(string promotionTitle, string promotionDetails, string couponCode = null)
+        {
+            var subscribers = await _context.Users
+                .Where(u => u.PromotionalEmailsEnabled)
+                .ToListAsync();
+
+            int emailsSent = 0;
+
+            foreach (var user in subscribers)
+            {
+                if (!string.IsNullOrEmpty(user.Email))
+                {
+                    try
+                    {
+                        await _emailService.SendPromotionalEmailAsync(
+                            user.Email,
+                            user.UserName ?? "Valued Customer",
+                            promotionTitle,
+                            promotionDetails,
+                            couponCode
+                        );
+                        emailsSent++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send promotional email to {Email}", user.Email);
+                    }
+                }
+            }
+
+            return Json(new { success = true, message = $"Sent promotional email to {emailsSent} subscribers." });
         }
     }
 }

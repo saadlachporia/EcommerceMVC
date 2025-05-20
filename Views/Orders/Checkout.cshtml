@@ -9,8 +9,7 @@
 <form asp-action="Checkout" method="post" novalidate>
     @Html.AntiForgeryToken()
 
-    @* Hidden OrderId to preserve it in POST *@
-    <input type="hidden" asp-for="OrderId" />
+    @* Hidden OrderId is not required here as order is created on submit, so we can remove it *@
 
     <div class="form-group mb-3">
         <label asp-for="FullName" class="form-label"></label>
