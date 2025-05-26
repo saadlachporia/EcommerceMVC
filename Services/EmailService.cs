@@ -9,7 +9,7 @@ using MailKit.Security;
 
 namespace EcommerceMVC.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
@@ -20,13 +20,13 @@ namespace EcommerceMVC.Services
             _logger = logger;
         }
 
-        /// <summary>
-        /// Sends an email asynchronously.
-        /// </summary>
-        /// <param name="toEmail">Recipient email address.</param>
-        /// <param name="subject">Email subject.</param>
-        /// <param name="body">Email body content.</param>
-        /// <param name="isHtml">Whether the body is HTML formatted.</param>
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            await SendEmailAsync(toEmail, subject, body, isHtml: false);
+        }
+
+        
+
         public async Task SendEmailAsync(string toEmail, string subject, string body, bool isHtml = false)
         {
             try
@@ -37,7 +37,7 @@ namespace EcommerceMVC.Services
                 var username = settings["UserName"];
                 var password = settings["Password"];
                 var enableSslStr = settings["EnableSsl"];
-                var fromEmail = settings["FromEmail"] ?? username; // Use FromEmail or fallback to username
+                var fromEmail = settings["FromEmail"] ?? username;
 
                 if (string.IsNullOrWhiteSpace(host) ||
                     string.IsNullOrWhiteSpace(portStr) ||
@@ -56,27 +56,21 @@ namespace EcommerceMVC.Services
 
                 if (!bool.TryParse(enableSslStr, out var enableSsl))
                 {
-                    enableSsl = true; // default to true if not set properly
+                    enableSsl = true;
                 }
 
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("Ecommerce Store", fromEmail));
                 message.To.Add(MailboxAddress.Parse(toEmail));
                 message.Subject = subject;
-
                 message.Body = isHtml
                     ? new TextPart("html") { Text = body }
                     : new TextPart("plain") { Text = body };
 
                 using var smtp = new SmtpClient();
-
-                // Connect with SecureSocketOptions depending on enableSsl flag
                 var secureSocketOption = enableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None;
-                // If port is 465, force SslOnConnect
                 if (port == 465)
-                {
                     secureSocketOption = SecureSocketOptions.SslOnConnect;
-                }
 
                 await smtp.ConnectAsync(host, port, secureSocketOption);
                 await smtp.AuthenticateAsync(username, password);
@@ -88,14 +82,13 @@ namespace EcommerceMVC.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
-                throw; // Optional: rethrow or handle according to your needs
+                throw;
             }
         }
 
         public async Task SendOrderConfirmationAsync(string email, string customerName, int orderId, decimal total, IEnumerable<(string productName, int quantity, decimal price)> items)
         {
             var subject = $"Order Confirmation #{orderId} - Thank You for Your Purchase!";
-
             var body = $@"Dear {customerName},
 
 Thank you for your order! We're pleased to confirm that we've received your order #{orderId}.
@@ -124,7 +117,6 @@ The Ecommerce Store Team";
         public async Task SendShippingUpdateAsync(string email, string customerName, int orderId, string status, string? trackingNumber = null)
         {
             var subject = $"Shipping Update for Order #{orderId}";
-
             var body = $@"Dear {customerName},
 
 We have an update regarding your order #{orderId}.
@@ -152,7 +144,6 @@ The Ecommerce Store Team";
         public async Task SendAccountCreationConfirmationAsync(string email, string username)
         {
             var subject = "Welcome to Our Store - Account Created Successfully";
-
             var body = $@"Hello {username},
 
 Welcome to our online store! Your account has been successfully created.
@@ -174,7 +165,6 @@ The Ecommerce Store Team";
         public async Task SendPasswordResetAsync(string email, string resetLink)
         {
             var subject = "Password Reset Request";
-
             var body = $@"Hello,
 
 We received a request to reset your password for your account. If you didn't make this request, you can safely ignore this email.
@@ -193,7 +183,6 @@ The Ecommerce Store Team";
         public async Task SendPromotionalEmailAsync(string email, string customerName, string promotionTitle, string promotionDetails, string? couponCode = null)
         {
             var subject = $"Special Offer: {promotionTitle}";
-
             var body = $@"Hello {customerName},
 
 We're excited to share this special offer with you!
@@ -223,7 +212,6 @@ The Ecommerce Store Team";
         public async Task SendCartAbandonmentReminderAsync(string email, string customerName, List<(string productName, decimal price)> items)
         {
             var subject = "Your Items Are Still Waiting for You";
-
             var body = $@"Hello {customerName},
 
 We noticed you left some items in your shopping cart. Don't worry, we've saved them for you!

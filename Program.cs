@@ -2,16 +2,20 @@ using EcommerceMVC.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
+using EcommerceMVC.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Register EmailService for sending emails
-builder.Services.AddTransient<EcommerceMVC.Services.EmailService>();
+// Configure SMTP settings
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+// Register the EmailService once (don't duplicate)
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 // Configure Entity Framework and SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -72,7 +76,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         await context.Database.MigrateAsync();
 
-        // Ensure SeedData.InitializeAsync exists and works
+        // Ensure SeedData.InitializeAsync exists and is correctly implemented
         await SeedData.InitializeAsync(services);
     }
     catch (Exception ex)
