@@ -10,12 +10,12 @@
 
 @if (!Model.Any())
 {
-    <p>Your cart is empty.</p>
+    <div class="alert alert-info">Your cart is empty.</div>
 }
 else
 {
-    <table class="table">
-        <thead>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
             <tr>
                 <th>Product</th>
                 <th>Price</th>
@@ -35,17 +35,19 @@ else
                         @(item.Product?.Price.ToString("C") ?? "-")
                     </td>
                     <td>
-                        <form asp-action="Update" method="post" style="display:inline">
+                        <form asp-action="Update" method="post" class="d-inline">
                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                            <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control d-inline-block" style="width:80px" />
-                            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            <div class="input-group" style="max-width: 140px;">
+                                <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control" />
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </div>
                         </form>
                     </td>
                     <td>
                         @(item.Product != null ? (item.Product.Price * item.Quantity).ToString("C") : "-")
                     </td>
                     <td>
-                        <form asp-action="Remove" method="post" style="display:inline">
+                        <form asp-action="Remove" method="post" class="d-inline">
                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
                             <button type="submit" class="btn btn-sm btn-danger">Remove</button>
                         </form>
@@ -55,13 +57,13 @@ else
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3"><strong>Total:</strong></td>
+                <td colspan="3" class="text-end"><strong>Total:</strong></td>
                 <td colspan="2">@total.ToString("C")</td>
             </tr>
         </tfoot>
     </table>
 
     <form asp-controller="Orders" asp-action="Checkout" method="post">
-        <button type="submit" class="btn btn-success">Checkout</button>
+        <button type="submit" class="btn btn-success">Proceed to Checkout</button>
     </form>
 }

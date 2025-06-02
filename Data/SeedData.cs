@@ -13,14 +13,19 @@ namespace EcommerceMVC.Data
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            string adminRole = "Admin";
-            string adminEmail = "admin@site.com";
-            string adminPassword = "Admin@123";
+            const string adminRole = "Admin";
+            const string adminEmail = "admin@site.com";
+            const string adminPassword = "Admin@123";
 
             // Create Admin Role if it doesn't exist
             if (!await roleManager.RoleExistsAsync(adminRole))
             {
-                await roleManager.CreateAsync(new IdentityRole(adminRole));
+                var roleResult = await roleManager.CreateAsync(new IdentityRole(adminRole));
+                if (!roleResult.Succeeded)
+                {
+                    foreach (var error in roleResult.Errors)
+                        Console.WriteLine($"Role creation error: {error.Description}");
+                }
             }
 
             // Create Admin User if it doesn't exist
@@ -32,22 +37,23 @@ namespace EcommerceMVC.Data
                     UserName = adminEmail,
                     Email = adminEmail,
                     EmailConfirmed = true,
-                    IsAdmin = true // Ensure admin flag is set
+                    IsAdmin = true
                 };
 
-                var result = await userManager.CreateAsync(adminUser, adminPassword);
-                if (result.Succeeded)
+                var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+                if (createResult.Succeeded)
                 {
-                    // Assign user to Admin role
-                    await userManager.AddToRoleAsync(adminUser, adminRole);
+                    var addToRoleResult = await userManager.AddToRoleAsync(adminUser, adminRole);
+                    if (!addToRoleResult.Succeeded)
+                    {
+                        foreach (var error in addToRoleResult.Errors)
+                            Console.WriteLine($"Add to role error: {error.Description}");
+                    }
                 }
                 else
                 {
-                    // Handle creation failure
-                    foreach (var error in result.Errors)
-                    {
-                        Console.WriteLine($"Error: {error.Description}");
-                    }
+                    foreach (var error in createResult.Errors)
+                        Console.WriteLine($"User creation error: {error.Description}");
                 }
             }
         }

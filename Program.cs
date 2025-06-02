@@ -1,23 +1,23 @@
 using EcommerceMVC.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using EcommerceMVC.Data;
 using EcommerceMVC.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure SMTP settings
+// Configure SMTP settings from appsettings.json
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
-// Register the EmailService once (don't duplicate)
+// Register EmailService as IEmailService
 builder.Services.AddTransient<IEmailService, EmailService>();
 
-// Configure Entity Framework and SQL Server
+// Configure Entity Framework with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -34,7 +34,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Configure authentication cookie
+// Configure authentication cookie settings
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -46,7 +46,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -76,7 +76,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         await context.Database.MigrateAsync();
 
-        // Ensure SeedData.InitializeAsync exists and is correctly implemented
+        // Ensure this method is defined in a static SeedData class
         await SeedData.InitializeAsync(services);
     }
     catch (Exception ex)
@@ -85,4 +85,5 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Run the application
 await app.RunAsync();

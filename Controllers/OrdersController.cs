@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using EcommerceMVC.Models;
 using EcommerceMVC.Models.OrderViewModels;
 using EcommerceMVC.Services;
-using EcommerceMVC.Data;
 
 namespace EcommerceMVC.Controllers
 {
@@ -17,12 +16,12 @@ namespace EcommerceMVC.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<OrdersController> _logger;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
 
         public OrdersController(
             ApplicationDbContext context,
             ILogger<OrdersController> logger,
-            EmailService emailService)
+            IEmailService emailService)
         {
             _context = context;
             _logger = logger;
@@ -35,7 +34,7 @@ namespace EcommerceMVC.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            var orders = await _context.Order
+            var orders = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .Where(o => o.UserId == userId && (status == null || o.Status == status))
@@ -51,7 +50,7 @@ namespace EcommerceMVC.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var order = await _context.Order
+            var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
@@ -66,7 +65,7 @@ namespace EcommerceMVC.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var order = await _context.Order
+            var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
@@ -78,7 +77,7 @@ namespace EcommerceMVC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStatus(int orderId, string status, string trackingNumber = null)
         {
-            var order = await _context.Order
+            var order = await _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
@@ -190,7 +189,7 @@ namespace EcommerceMVC.Controllers
                 }).ToList()
             };
 
-            _context.Order.Add(order);
+            _context.Orders.Add(order);
             _context.CartItems.RemoveRange(cart.CartItems);
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync();
@@ -225,7 +224,7 @@ namespace EcommerceMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> TrackOrder(int orderId)
         {
-            var order = await _context.Order
+            var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);

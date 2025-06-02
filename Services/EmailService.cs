@@ -25,8 +25,6 @@ namespace EcommerceMVC.Services
             await SendEmailAsync(toEmail, subject, body, isHtml: false);
         }
 
-        
-
         public async Task SendEmailAsync(string toEmail, string subject, string body, bool isHtml = false)
         {
             try
@@ -39,10 +37,8 @@ namespace EcommerceMVC.Services
                 var enableSslStr = settings["EnableSsl"];
                 var fromEmail = settings["FromEmail"] ?? username;
 
-                if (string.IsNullOrWhiteSpace(host) ||
-                    string.IsNullOrWhiteSpace(portStr) ||
-                    string.IsNullOrWhiteSpace(username) ||
-                    string.IsNullOrWhiteSpace(password))
+                if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(portStr) ||
+                    string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 {
                     _logger.LogWarning("SMTP settings are not properly configured.");
                     return;
@@ -209,7 +205,7 @@ The Ecommerce Store Team";
             await SendEmailAsync(email, subject, body);
         }
 
-        public async Task SendCartAbandonmentReminderAsync(string email, string customerName, List<(string productName, decimal price)> items)
+        public async Task SendCartAbandonmentReminderAsync(string email, string customerName, List<(string productName, decimal productPrice)> items)
         {
             var subject = "Your Items Are Still Waiting for You";
             var body = $@"Hello {customerName},
@@ -220,7 +216,7 @@ Items in your cart:";
 
             foreach (var item in items)
             {
-                body += $"\n- {item.productName} - ${item.price:F2}";
+                body += $"\n- {item.productName} - ${item.productPrice:F2}";
             }
 
             body += @"

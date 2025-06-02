@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
@@ -17,9 +16,9 @@ namespace EcommerceMVC.Controllers
     public class CartController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;  // Use interface here
 
-        public CartController(ApplicationDbContext context, EmailService emailService)
+        public CartController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
             _emailService = emailService;
@@ -55,7 +54,7 @@ namespace EcommerceMVC.Controllers
 
             if (cart == null)
             {
-                cart = new Cart { UserId = userId };
+                cart = new Cart { UserId = userId, LastModified = DateTime.UtcNow };
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync(); // Save to generate CartId for FK
             }
@@ -76,9 +75,8 @@ namespace EcommerceMVC.Controllers
                 _context.CartItems.Add(cartItem);
             }
 
+            cart.LastModified = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-
-            // NOTE: Removed email notification for adding items to cart as per requirements
 
             return RedirectToAction(nameof(Index));
         }
@@ -105,6 +103,7 @@ namespace EcommerceMVC.Controllers
                 cartItem.Quantity = quantity;
             }
 
+            cartItem.Cart.LastModified = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
@@ -123,18 +122,18 @@ namespace EcommerceMVC.Controllers
             if (cartItem == null || cartItem.Cart == null || cartItem.Cart.UserId != userId)
                 return Forbid();
 
+            cartItem.Cart.LastModified = DateTime.UtcNow;
             _context.CartItems.Remove(cartItem);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
 
-        // Schedule a task to check for abandoned carts daily and send reminder emails
+        // Admin: Send reminders for abandoned carts
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> SendAbandonmentReminders()
         {
-            // Get carts that have been inactive for more than 24 hours
             var abandonedCarts = await _context.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
@@ -149,20 +148,19 @@ namespace EcommerceMVC.Controllers
                 if (cart.User != null && !string.IsNullOrEmpty(cart.User.Email))
                 {
                     var cartItems = cart.CartItems.Select(ci => (ci.Product.Name, ci.Product.Price)).ToList();
-                    
+
                     await _emailService.SendCartAbandonmentReminderAsync(
                         cart.User.Email,
                         cart.User.UserName ?? "Valued Customer",
                         cartItems
                     );
-                    
-                    emailsSent++;
-                    
-                    // Update the cart's last reminder sent timestamp
+
                     cart.LastReminderSent = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    emailsSent++;
                 }
             }
+
+            await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = $"Sent {emailsSent} cart abandonment reminder emails." });
         }
