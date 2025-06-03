@@ -1,11 +1,12 @@
 using EcommerceMVC.Models;
 using EcommerceMVC.Services;
 using EcommerceMVC.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace EcommerceMVC.Controllers
 {
@@ -110,10 +111,7 @@ namespace EcommerceMVC.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-            {
-                // Do not reveal that the user does not exist
                 return RedirectToAction("ForgotPasswordConfirmation");
-            }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = Url.Action(
@@ -150,16 +148,11 @@ namespace EcommerceMVC.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-            {
-                // Do not reveal user not found
                 return RedirectToAction("ResetPasswordConfirmation");
-            }
 
             var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
             if (result.Succeeded)
-            {
                 return RedirectToAction("ResetPasswordConfirmation");
-            }
 
             foreach (var error in result.Errors)
                 ModelState.AddModelError(string.Empty, error.Description);
@@ -170,5 +163,36 @@ namespace EcommerceMVC.Controllers
         // GET: /Account/ResetPasswordConfirmation
         [HttpGet]
         public IActionResult ResetPasswordConfirmation() => View();
+
+        // ✅ GET: /Account/ChangePassword
+        [HttpGet]
+        [Authorize]
+        public IActionResult ChangePassword() => View();
+
+        // ✅ POST: /Account/ChangePassword
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("Login");
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User changed their password successfully.");
+                return RedirectToAction("Index", "Profile");
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            return View(model);
+        }
     }
 }

@@ -1,0 +1,173 @@
+@model EcommerceMVC.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<h2>User Profile</h2>
+
+<!-- Update Profile -->
+<h4>Update Profile</h4>
+
+@if (TempData["ProfileUpdated"] != null)
+{
+    <div class="alert alert-success">@TempData["ProfileUpdated"]</div>
+}
+
+<form asp-action="UpdateProfile" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label asp-for="Profile.FullName"></label>
+        <input asp-for="Profile.FullName" class="form-control" />
+        <span asp-validation-for="Profile.FullName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Profile.PhoneNumber"></label>
+        <input asp-for="Profile.PhoneNumber" class="form-control" />
+        <span asp-validation-for="Profile.PhoneNumber" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Profile.Email"></label>
+        <input asp-for="Profile.Email" class="form-control" />
+        <span asp-validation-for="Profile.Email" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Profile</button>
+</form>
+
+<hr />
+<h3>Saved Addresses</h3>
+
+@if (TempData["AddressAdded"] != null)
+{
+    <div class="alert alert-success">@TempData["AddressAdded"]</div>
+}
+@if (TempData["AddressDeleted"] != null)
+{
+    <div class="alert alert-success">@TempData["AddressDeleted"]</div>
+}
+
+@if (Model.Addresses != null && Model.Addresses.Any())
+{
+    <ul class="list-group mb-3">
+        @foreach (var addr in Model.Addresses)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>@addr.Line1, @addr.City, @addr.State, @addr.ZipCode, @addr.Country</span>
+                <form asp-action="DeleteAddress" asp-route-id="@addr.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure you want to delete this address?');">Delete</button>
+                </form>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No addresses saved yet.</p>
+}
+
+<!-- Add Address -->
+<h4>Add New Address</h4>
+
+<form asp-action="AddAddress" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <input asp-for="NewAddress.Line1" class="form-control" placeholder="Line 1" />
+        <span asp-validation-for="NewAddress.Line1" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewAddress.City" class="form-control" placeholder="City" />
+        <span asp-validation-for="NewAddress.City" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewAddress.State" class="form-control" placeholder="State" />
+        <span asp-validation-for="NewAddress.State" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewAddress.ZipCode" class="form-control" placeholder="Zip Code" />
+        <span asp-validation-for="NewAddress.ZipCode" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewAddress.Country" class="form-control" placeholder="Country" />
+        <span asp-validation-for="NewAddress.Country" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-success">Add Address</button>
+</form>
+
+<hr />
+<h3>Payment Methods</h3>
+
+@if (TempData["CardAdded"] != null)
+{
+    <div class="alert alert-success">@TempData["CardAdded"]</div>
+}
+@if (TempData["CardDeleted"] != null)
+{
+    <div class="alert alert-success">@TempData["CardDeleted"]</div>
+}
+
+@if (Model.PaymentMethods != null && Model.PaymentMethods.Any())
+{
+    <ul class="list-group mb-3">
+        @foreach (var pay in Model.PaymentMethods)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>@pay.CardType **** @pay.CardNumber.Substring(pay.CardNumber.Length - 4)</span>
+                <form asp-action="DeletePaymentMethod" asp-route-id="@pay.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure you want to delete this card?');">Delete</button>
+                </form>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No saved payment methods.</p>
+}
+
+<!-- Add Payment Method -->
+<h4>Add New Payment Method</h4>
+
+<form asp-action="AddPaymentMethod" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <input asp-for="NewPaymentMethod.CardHolderName" class="form-control" placeholder="Name on Card" />
+        <span asp-validation-for="NewPaymentMethod.CardHolderName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewPaymentMethod.CardNumber" class="form-control" placeholder="Card Number" />
+        <span asp-validation-for="NewPaymentMethod.CardNumber" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewPaymentMethod.ExpiryMonth" class="form-control" placeholder="MM" />
+        <span asp-validation-for="NewPaymentMethod.ExpiryMonth" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewPaymentMethod.ExpiryYear" class="form-control" placeholder="YYYY" />
+        <span asp-validation-for="NewPaymentMethod.ExpiryYear" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input asp-for="NewPaymentMethod.CardType" class="form-control" placeholder="Card Type" />
+        <span asp-validation-for="NewPaymentMethod.CardType" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-success">Add Card</button>
+</form>
+
+<hr />
+<h3>Password Management</h3>
+
+@if (TempData["PasswordResetEmailSent"] != null)
+{
+    <div class="alert alert-success">@TempData["PasswordResetEmailSent"]</div>
+}
+<a asp-controller="Account" asp-action="ForgotPassword" class="btn btn-link mt-2">
+    Change Your Password? Click here to reset via email.
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
