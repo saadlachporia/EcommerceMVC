@@ -26,5 +26,117 @@
     </li>
 </ul>
 
-<a href="@Url.Action("TrackOrder", "Orders")" class="btn btn-primary">Track Order</a>
-<a href="@Url.Action("Index", "Products")" class="btn btn-secondary">Continue Shopping</a>
+<div class="d-flex gap-2">
+    <a href="@Url.Action("TrackOrder", "Orders")" class="btn btn-primary">Track Order</a>
+    <a href="@Url.Action("Index", "Products")" class="btn btn-secondary">Continue Shopping</a>
+</div>
+
+<style>
+    /* --- Order Confirmation Page Styling --- */
+
+h2 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    letter-spacing: 1.1px;
+    margin-bottom: 1.5rem;
+    color: #222;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+p {
+    font-size: 1.15rem;
+    margin-bottom: 2rem;
+    color: #444;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #222;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.list-group {
+    max-width: 600px;
+    margin-bottom: 2.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.list-group-item {
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.list-group-item:not(:last-child) {
+    border-bottom: 1px solid #eee;
+}
+
+.list-group-item h6 {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.list-group-item small {
+    color: #888;
+}
+
+.list-group-item strong {
+    font-size: 1.1rem;
+    color: #222;
+}
+
+.text-muted {
+    color: #999 !important;
+}
+
+.d-flex.gap-2 {
+    max-width: 600px;
+    margin-bottom: 3rem;
+}
+
+.d-flex.gap-2 a.btn {
+    flex: 1;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    padding: 0.7rem 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.d-flex.gap-2 a.btn-primary {
+    background-color: #f05a28;
+    border: none;
+    color: white;
+}
+
+.d-flex.gap-2 a.btn-primary:hover {
+    background-color: #d24d21;
+}
+
+.d-flex.gap-2 a.btn-secondary {
+    background-color: #eaeaea;
+    border: none;
+    color: #444;
+}
+
+.d-flex.gap-2 a.btn-secondary:hover {
+    background-color: #d5d5d5;
+}
+
+@@media (max-width: 576px) {
+    .list-group,
+    .d-flex.gap-2 {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0 1rem;
+    }
+}
+
+</style>

@@ -4,9 +4,126 @@
     ViewData["Title"] = "My Account";
 }
 
-<h2>My Account</h2>
+<style>
+    body {
+        background: #f9f9f9;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #333;
+        min-height: 100vh;
+        padding: 40px 20px;
+    }
 
-<div>
+    h2 {
+        font-weight: 600;
+        font-size: 2.2rem;
+        letter-spacing: 0.03em;
+        margin-bottom: 40px;
+        text-align: center;
+        color: #222;
+    }
+
+    div.account-info, div.orders-section {
+        background: #fff;
+        border-radius: 8px;
+        padding: 30px 35px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        margin-bottom: 50px;
+        max-width: 860px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    h4 {
+        font-weight: 700;
+        font-size: 1.25rem;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 28px;
+        color: #111;
+        letter-spacing: 0.02em;
+    }
+
+    p {
+        font-size: 1.05rem;
+        margin-bottom: 14px;
+        color: #555;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+    }
+
+    strong {
+        color: #222;
+        font-weight: 600;
+    }
+
+    hr {
+        border: none;
+        height: 1px;
+        background: #ddd;
+        max-width: 860px;
+        margin: 60px auto;
+        border-radius: 2px;
+        box-shadow: none;
+    }
+
+    table.table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 16px;
+        background: transparent;
+        border-radius: 6px;
+        overflow: visible;
+        box-shadow: none;
+    }
+
+    table.table thead tr {
+        background: transparent;
+        color: #666;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #eee;
+    }
+
+    table.table th, table.table td {
+        padding: 14px 20px;
+        text-align: left;
+        vertical-align: middle;
+        font-weight: 400;
+        color: #444;
+        border-bottom: none;
+    }
+
+    table.table tbody tr {
+        background: #fff;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        border-radius: 6px;
+        transition: box-shadow 0.3s ease;
+        cursor: default;
+    }
+
+    table.table tbody tr:hover {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        color: #000;
+    }
+
+    table.table tbody td {
+        font-weight: 500;
+    }
+
+    p.no-orders {
+        text-align: center;
+        font-style: italic;
+        color: #999;
+        margin-top: 24px;
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
+</style>
+
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="account-info">
     <h4>Account Information</h4>
     <p><strong>Username:</strong> @Model.UserName</p>
     <p><strong>Email:</strong> @Model.Email</p>
@@ -14,7 +131,7 @@
 
 <hr />
 
-<div>
+<div class="orders-section">
     <h4>My Orders</h4>
 
     @if (Model.Orders.Any())
@@ -43,6 +160,6 @@
     }
     else
     {
-        <p>You have no orders yet.</p>
+        <p class="no-orders">You have no orders yet.</p>
     }
 </div>

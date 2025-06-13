@@ -5,64 +5,242 @@
     bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin");
 }
 
-<h1>Product List</h1>
+<h1 class="mb-4 fw-bold" style="letter-spacing: 1.2px;">Product List</h1>
 
 @if (isAdmin)
 {
     <p>
-        <a class="btn btn-primary" href="@Url.Action("Create")">Add New Product</a>
+        <a class="btn btn-primary btn-lg rounded-pill px-4 shadow" href="@Url.Action("Create")">
+            + Add New Product
+        </a>
     </p>
 }
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Stock</th>
-            <th>Actions</th> <!-- Visible for all -->
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.ImagePath))
-                    {
-                        <img src="@item.ImagePath" alt="Product Image" width="100" height="100" style="object-fit: cover;" />
-                    }
-                    else
-                    {
-                        <span>No Image</span>
-                    }
-                </td>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</td>
-                <td>@item.Category?.Name</td>
-                <td>@item.StockQuantity</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-info me-1">View</a>
+<div class="product-grid">
+    @foreach (var item in Model)
+    {
+        <div class="product-card">
+            <div class="image-wrapper">
+                @if (!string.IsNullOrEmpty(item.ImagePath))
+                {
+                    <img src="@item.ImagePath" alt="@item.Name" loading="lazy" />
+                }
+                else
+                {
+                    <div class="no-image">No Image</div>
+                }
+            </div>
 
-                    <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="productId" value="@item.ProductId" />
-                        <input type="hidden" name="quantity" value="1" />
-                        <button type="submit" class="btn btn-sm btn-success">Add to Cart</button>
-                    </form>
+            <div class="product-info">
+                <h5 class="product-name">@item.Name</h5>
+                <p class="product-category">@item.Category?.Name</p>
+                <p class="product-price">@item.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</p>
+                <p class="product-stock">@((item.Quantity > 0) ? $"{item.Quantity} in stock" : "Out of stock")</p>
+            </div>
 
-                    @if (isAdmin)
-                    {
-                        <hr />
-                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-danger">Delete</a>
-                    }
-                </td>
-            </tr>
+            <div class="product-actions">
+                <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-secondary btn-sm me-2">
+                    View
+                </a>
+
+                <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@item.ProductId" />
+                    <input type="hidden" name="quantity" value="1" />
+                    <button type="submit" class="btn btn-primary btn-sm" @(item.Quantity == 0 ? "disabled" : "")>
+                        Add to Cart
+                    </button>
+                </form>
+
+                @if (isAdmin)
+                {
+                    <div class="admin-actions mt-2">
+                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-warning btn-sm me-2">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-danger btn-sm">Delete</a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+
+<style>
+    /* Grid layout for products */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.8rem;
+    }
+
+    /* Product card styling */
+    .product-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .product-card:hover {
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+        transform: translateY(-4px);
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* 1:1 Aspect ratio */
+        overflow: hidden;
+        background: #f8f8f8;
+        border-bottom: 1px solid #eee;
+    }
+
+    .image-wrapper img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: translate(-50%, -50%);
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .image-wrapper img {
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    .no-image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #bbb;
+        font-size: 1rem;
+        font-style: italic;
+    }
+
+    .product-info {
+        padding: 1rem 1.2rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.2rem;
+        color: #222;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-category {
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .product-price {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: #007bff;
+        margin-bottom: 0.3rem;
+    }
+
+    .product-stock {
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .product-actions {
+        padding: 0.8rem 1.2rem 1.2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .product-actions .btn {
+        border-radius: 24px;
+        font-size: 0.85rem;
+        padding: 0.35rem 1rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .product-actions .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .product-actions .btn-primary:disabled {
+        background-color: #aaa;
+        border-color: #aaa;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .product-actions .btn-outline-secondary {
+        color: #555;
+        border-color: #ccc;
+    }
+
+    .product-actions .btn-outline-secondary:hover {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+
+    .admin-actions {
+        width: 100%;
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.6rem;
+    }
+
+    .admin-actions .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+
+    .admin-actions .btn-warning:hover {
+        background-color: #e0a800;
+        border-color: #d39e00;
+        color: #212529;
+    }
+
+    .admin-actions .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+
+    .admin-actions .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+
+    /* Responsive tweaks */
+    @@media (max-width: 576px) {
+        .product-actions {
+            flex-direction: column;
         }
-    </tbody>
-</table>
+        .product-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+        .admin-actions {
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+    }
+</style>

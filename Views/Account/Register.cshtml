@@ -3,50 +3,157 @@
 @{
     ViewData["Title"] = "Register";
 }
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<h2>Register</h2>
+<style>
+    body {
+        background-color: #f9f9f9;
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
 
-<form asp-action="Register" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
+    h2 {
+        font-weight: 600;
+        font-size: 1.8rem;
+        color: #111;
+        margin-bottom: 30px;
+    }
 
-    <div class="form-floating mb-3">
-        <input asp-for="Email" class="form-control" />
-        <label asp-for="Email"></label>
-        <span asp-validation-for="Email" class="text-danger"></span>
+    form {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .form-floating {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        background-color: #fafafa;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #111;
+        background-color: #fff;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1);
+    }
+
+    label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .form-check-input {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        margin-top: 0.3rem;
+        border: 1px solid #ccc;
+        accent-color: #111;
+    }
+
+    .form-check-label {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #444;
+        margin-left: 8px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #111;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        width: 100%;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #222;
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+        color: #d9534f !important;
+        font-weight: 500;
+    }
+
+    .validation-summary-errors ul {
+        padding-left: 20px;
+        margin-top: 10px;
+        color: #d9534f;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h2 class="text-center">@ViewData["Title"]</h2>
+
+            <form asp-action="Register" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="form-floating">
+                    <input asp-for="Email" class="form-control" placeholder="Email" />
+                    <label asp-for="Email"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating">
+                    <input asp-for="FullName" class="form-control" placeholder="Full Name" />
+                    <label asp-for="FullName"></label>
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating">
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
+                    <label asp-for="PhoneNumber"></label>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="PromotionalEmailsEnabled" class="form-check-input" id="promoEmails" />
+                    <label class="form-check-label" for="promoEmails" asp-for="PromotionalEmailsEnabled"></label>
+                </div>
+
+                <div class="form-floating">
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Password" />
+                    <label asp-for="Password"></label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating">
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" />
+                    <label asp-for="ConfirmPassword"></label>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Register</button>
+            </form>
+        </div>
     </div>
-
-    <div class="form-floating mb-3">
-        <input asp-for="FullName" class="form-control" />
-        <label asp-for="FullName"></label>
-        <span asp-validation-for="FullName" class="text-danger"></span>
-    </div>
-
-    <div class="form-floating mb-3">
-        <input asp-for="PhoneNumber" class="form-control" />
-        <label asp-for="PhoneNumber"></label>
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="PromotionalEmailsEnabled" class="form-check-input" />
-        <label asp-for="PromotionalEmailsEnabled" class="form-check-label"></label>
-    </div>
-
-    <div class="form-floating mb-3">
-        <input asp-for="Password" class="form-control" type="password" />
-        <label asp-for="Password"></label>
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-
-    <div class="form-floating mb-3">
-        <input asp-for="ConfirmPassword" class="form-control" type="password" />
-        <label asp-for="ConfirmPassword"></label>
-        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary w-100">Register</button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

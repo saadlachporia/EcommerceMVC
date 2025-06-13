@@ -1,6 +1,104 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<article class="blog-post container my-5">
+    <header class="mb-4">
+        <h1 class="blog-title">@ViewData["Title"]</h1>
+        <p class="blog-subtitle text-muted">Last updated: June 2025</p>
+    </header>
+
+    <section class="blog-content">
+        <p>
+            At EcommerceMVC, we take your privacy seriously. This page explains how we collect, use, and protect your personal information to ensure you feel confident shopping with us.
+        </p>
+
+        <h2>Information We Collect</h2>
+        <p>
+            We collect information you provide directly to us, such as your name, email, and shipping address when you create an account or place an order. We also collect data about your browsing activity to improve your experience.
+        </p>
+
+        <h2>How We Use Your Information</h2>
+        <ul>
+            <li>To process and fulfill your orders</li>
+            <li>To communicate important updates about your purchases</li>
+            <li>To personalize your shopping experience</li>
+            <li>To improve our website and services</li>
+        </ul>
+
+        <h2>Security</h2>
+        <p>
+            We use industry-standard security measures to protect your information. However, no online transmission can be guaranteed 100% secure.
+        </p>
+
+        <h2>Your Choices</h2>
+        <p>
+            You can update your account information or opt out of marketing emails by accessing your profile settings.
+        </p>
+
+        <h2>Contact Us</h2>
+        <p>
+            If you have any questions about this Privacy Policy, please <a href="/Contact">contact us</a>.
+        </p>
+    </section>
+</article>
+
+<style>
+    .blog-post {
+        font-family: 'Inter', sans-serif;
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 2rem 1rem;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    .blog-title {
+        font-weight: 800;
+        font-size: 2.5rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.2rem;
+        color: #111;
+        text-transform: uppercase;
+    }
+
+    .blog-subtitle {
+        font-weight: 500;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        color: #666;
+    }
+
+    .blog-content h2 {
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        color: #222;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .blog-content p, .blog-content ul {
+        font-size: 1.05rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .blog-content ul {
+        padding-left: 1.25rem;
+        list-style-type: disc;
+    }
+
+    .blog-content a {
+        color: #ff3366;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .blog-content a:hover {
+        color: #cc2a54;
+        text-decoration: underline;
+    }
+</style>

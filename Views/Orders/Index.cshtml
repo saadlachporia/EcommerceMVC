@@ -4,7 +4,136 @@
     ViewData["Title"] = "My Orders";
 }
 
-<h1>My Orders</h1>
+<h1 class="page-title">My Orders</h1>
+
+<style>
+    /* Container for the page content */
+    .page-title {
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #111;
+        letter-spacing: 0.05em;
+        font-family: 'Inter', sans-serif;
+    }
+
+    table.table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    table.table thead tr {
+        background-color: transparent;
+        border-bottom: 2px solid #e5e5e5;
+    }
+
+    table.table thead th {
+        color: #555;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        padding: 0.75rem 1rem;
+        letter-spacing: 0.05em;
+        text-align: left;
+        vertical-align: middle;
+        border: none;
+    }
+
+    table.table tbody tr {
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+        border-radius: 8px;
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    table.table tbody tr:hover {
+        box-shadow: 0 4px 8px rgb(0 0 0 / 0.15);
+    }
+
+    table.table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        color: #333;
+        border: none;
+    }
+
+    table.table tbody ul {
+        padding-left: 1.2rem;
+        margin: 0;
+    }
+
+    table.table tbody ul li {
+        margin-bottom: 0.25rem;
+        color: #555;
+    }
+
+    select.form-select.status-select {
+        width: 140px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+        border: 1.5px solid #ddd;
+        border-radius: 8px;
+        padding: 6px 12px;
+        background-color: #fff;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+    select.form-select.status-select:hover,
+    select.form-select.status-select:focus {
+        border-color: #ff3366;
+        box-shadow: 0 0 6px #ff3366aa;
+        outline: none;
+    }
+
+    a {
+        color: #111;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    a:hover {
+        color: #ff3366;
+        text-decoration: underline;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        table.table thead {
+            display: none;
+        }
+        table.table tbody tr {
+            display: block;
+            margin-bottom: 1.5rem;
+            box-shadow: none;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        table.table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        table.table tbody td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #666;
+            flex-basis: 45%;
+        }
+        table.table tbody td:last-child {
+            justify-content: flex-start;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+    }
+</style>
 
 <table class="table">
     <thead>
@@ -22,9 +151,9 @@
     @foreach (var order in Model)
     {
         <tr>
-            <td>@order.FullName</td>
-            <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
-            <td>
+            <td data-label="Customer Name">@order.FullName</td>
+            <td data-label="Order Date">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+            <td data-label="Products">
                 <ul>
                 @foreach (var item in order.OrderItems)
                 {
@@ -32,17 +161,17 @@
                 }
                 </ul>
             </td>
-            <td>@order.TotalAmount.ToString("C")</td>
-            <td>@order.PaymentMethod</td>
-            <td>
-                <select class="form-select status-select" data-id="@order.OrderId">
+            <td data-label="Total Amount">@order.TotalAmount.ToString("C")</td>
+            <td data-label="Payment Method">@order.PaymentMethod</td>
+            <td data-label="Status">
+                <select class="form-select status-select" data-id="@order.OrderId" aria-label="Update order status">
                     <option value="Incomplete" selected="@(order.Status == "Incomplete")">Incomplete</option>
                     <option value="Shipped" selected="@(order.Status == "Shipped")">Shipped</option>
                     <option value="Complete" selected="@(order.Status == "Complete")">Complete</option>
                     <option value="Cancelled" selected="@(order.Status == "Cancelled")">Cancelled</option>
                 </select>
             </td>
-            <td>
+            <td data-label="Actions">
                 <a asp-action="Details" asp-route-id="@order.OrderId">Details</a> |
                 <a asp-action="Edit" asp-route-id="@order.OrderId">Edit</a> |
                 <a asp-action="Delete" asp-route-id="@order.OrderId">Delete</a>

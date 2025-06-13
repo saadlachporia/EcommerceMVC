@@ -6,7 +6,7 @@
 <p>@Model.Description</p>
 <p>Price: @Model.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</p>
 <p>Category: @Model.Category?.Name</p>
-<p>Stock: @Model.StockQuantity</p>
+<p>Stock: @Model.Quantity</p>
 
 <form asp-controller="Cart" asp-action="AddToCart" method="post">
     <input type="hidden" name="productId" value="@Model.ProductId" />

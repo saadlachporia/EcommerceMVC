@@ -10,18 +10,23 @@
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">Your cart is empty.</div>
+    <div class="alert alert-info" role="alert">
+        Your cart is empty.
+    </div>
+
+    <a class="btn btn-primary" asp-controller="Orders" asp-action="TrackOrder">
+        Track Your Order</a>
 }
 else
 {
-    <table class="table table-bordered table-striped">
-        <thead class="thead-dark">
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
             <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th>Actions</th>
+                <th scope="col">Product</th>
+                <th scope="col">Price</th>
+                <th scope="col" style="width: 180px;">Quantity</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col" style="width: 100px;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -35,21 +40,30 @@ else
                         @(item.Product?.Price.ToString("C") ?? "-")
                     </td>
                     <td>
-                        <form asp-action="Update" method="post" class="d-inline">
+                        <form asp-action="Update" method="post" class="d-flex align-items-center gap-2">
                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                            <div class="input-group" style="max-width: 140px;">
-                                <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control" />
-                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                            </div>
+                            <input 
+                                type="number" 
+                                name="quantity" 
+                                value="@item.Quantity" 
+                                min="1" 
+                                class="form-control form-control-sm" 
+                                style="max-width: 70px;" 
+                                aria-label="Quantity for @item.Product?.Name" />
+                            <button type="submit" class="btn btn-sm btn-primary" aria-label="Update quantity for @item.Product?.Name">
+                                Update
+                            </button>
                         </form>
                     </td>
                     <td>
                         @(item.Product != null ? (item.Product.Price * item.Quantity).ToString("C") : "-")
                     </td>
                     <td>
-                        <form asp-action="Remove" method="post" class="d-inline">
+                        <form asp-action="Remove" method="post">
                             <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                            <button type="submit" class="btn btn-sm btn-danger" aria-label="Remove @item.Product?.Name from cart">
+                                Remove
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -57,13 +71,15 @@ else
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                <td colspan="2">@total.ToString("C")</td>
+                <td colspan="3" class="text-end fw-bold">Total:</td>
+                <td colspan="2" class="fw-bold">@total.ToString("C")</td>
             </tr>
         </tfoot>
     </table>
 
     <form asp-controller="Orders" asp-action="Checkout" method="post">
-        <button type="submit" class="btn btn-success">Proceed to Checkout</button>
+        <button type="submit" class="btn btn-success btn-lg w-100">
+            Proceed to Checkout
+        </button>
     </form>
 }

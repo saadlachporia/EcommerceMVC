@@ -9,35 +9,33 @@
 <form asp-action="Checkout" method="post" novalidate>
     @Html.AntiForgeryToken()
 
-    @* Hidden OrderId is not required here as order is created on submit, so we can remove it *@
-
-    <div class="form-group mb-3">
+    <div class="mb-3">
         <label asp-for="FullName" class="form-label"></label>
         <input asp-for="FullName" class="form-control" />
         <span asp-validation-for="FullName" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-3">
+    <div class="mb-3">
         <label asp-for="Address" class="form-label"></label>
         <textarea asp-for="Address" class="form-control" rows="3"></textarea>
         <span asp-validation-for="Address" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-3">
+    <div class="mb-3">
         <label asp-for="Email" class="form-label"></label>
         <input asp-for="Email" type="email" class="form-control" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-3">
+    <div class="mb-3">
         <label asp-for="Phone" class="form-label"></label>
         <input asp-for="Phone" type="tel" class="form-control" />
         <span asp-validation-for="Phone" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-4">
+    <div class="mb-4">
         <label asp-for="PaymentMethod" class="form-label"></label>
-        <select asp-for="PaymentMethod" class="form-select">
+        <select asp-for="PaymentMethod" class="form-select" aria-label="Select payment method">
             <option value="">-- Select Payment Method --</option>
             <option value="CashOnDelivery">Cash on Delivery</option>
             <option value="CreditCard">Credit Card</option>
@@ -64,9 +62,139 @@
         </li>
     </ul>
 
-    <button type="submit" class="btn btn-primary">Place Order</button>
+    <button type="submit" class="btn btn-primary w-100">Place Order</button>
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+
+<style>
+    /* --- Checkout Page Styling --- */
+
+h2 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    letter-spacing: 1.1px;
+    margin-bottom: 2rem;
+    color: #222;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+form {
+    max-width: 600px;
+    margin: 0 auto 4rem;
+    background: #fff;
+    padding: 2.5rem 3rem;
+    border-radius: 8px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+input.form-control,
+textarea.form-control,
+select.form-select {
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+input.form-control:focus,
+textarea.form-control:focus,
+select.form-select:focus {
+    outline: none;
+    border-color: #f05a28; /* Superbalist orange */
+    box-shadow: 0 0 8px rgba(240, 90, 40, 0.3);
+}
+
+.text-danger {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    color: #e04f4f;
+    font-weight: 600;
+}
+
+.mb-3, .mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+button[type="submit"] {
+    background-color: #f05a28;
+    border: none;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 0.75rem 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+button[type="submit"]:hover {
+    background-color: #d24d21;
+}
+
+/* Order Summary */
+
+h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #222;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.list-group {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 8px;
+}
+
+.list-group-item {
+    border: none;
+    padding: 1rem 1.5rem;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.list-group-item:not(:last-child) {
+    border-bottom: 1px solid #eee;
+}
+
+.list-group-item h6 {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.list-group-item small {
+    color: #888;
+}
+
+.list-group-item strong {
+    font-size: 1.1rem;
+    color: #222;
+}
+
+.text-muted {
+    color: #999 !important;
+}
+
+@@media (max-width: 576px) {
+    form {
+        padding: 1.5rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+}
+
+</style>
