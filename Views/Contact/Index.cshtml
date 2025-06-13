@@ -1,0 +1,70 @@
+@model EcommerceMVC.Models.Contact
+
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h1 class="display-5 fw-bold text-center mb-4">Contact Us</h1>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success rounded-3 shadow-sm">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger rounded-3 shadow-sm">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="Index" method="post" class="p-4 p-md-5 bg-white shadow rounded-4 border">
+
+                @Html.AntiForgeryToken()
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Name" class="form-control rounded-3" placeholder="Your full name" />
+                    <label asp-for="Name">Name</label>
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" class="form-control rounded-3" placeholder="you@example.com" />
+                    <label asp-for="Email">Email</label>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Phone" class="form-control rounded-3" placeholder="Phone number" />
+                    <label asp-for="Phone">Phone</label>
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="OrderID" class="form-control rounded-3" placeholder="Order reference (optional)" />
+                    <label asp-for="OrderID">Order ID</label>
+                    <span asp-validation-for="OrderID" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <textarea asp-for="Message" class="form-control rounded-3" style="height: 120px;" placeholder="Write your message here"></textarea>
+                    <label asp-for="Message">Message</label>
+                    <span asp-validation-for="Message" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100 py-2 rounded-pill shadow-sm">
+                    Submit Message
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

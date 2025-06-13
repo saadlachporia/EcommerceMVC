@@ -14,6 +14,10 @@ builder.Services.AddControllersWithViews();
 // Configure SMTP settings from appsettings.json
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings"));
+
+
 // Register EmailService as IEmailService
 builder.Services.AddTransient<IEmailService, EmailService>();
 
